@@ -77,3 +77,38 @@ async def create_item(item: Item):
     * `tax`: 선택적 부동소수점 숫자, 기본값 `0.1`
 
 이 예제는 FastAPI와 Pydantic을 활용하여 데이터 유효성 검사 및 직렬화를 수행하는 방법을 보여준다. 사용자로부터 입력된 데이터는 `Item` 모델의 인스턴스로 변환되며, 이 과정에서 필드의 타입과 필수 여부가 검증된다. 또한, 선택적 필드나 기본값이 있는 필드의 경우 적절히 처리된다.
+
+### Pydantic의 필드 제약 조건
+
+Pydantic의 Field 함수는 모델 필드에 대한 추가 정보와 제약 조건을 설정하는 데 사용된다. 이를 통해 데이터의 유효성 검사와 자동 문서화가 가능하다.
+
+- **주요 Field 옵션들**
+    * `default`: 필드의 기본값 설정
+    * `alias`: 데이터 전송시, JSON 필드의 이름을 Python 변수와 다르게 설정
+    * `title`: 스키마에서 볼 수 있는 필드명
+    * `description`: 필드에 대한 설명
+    * `min_length`, `max_length`: 문자열 길이 제한
+    * `gt`, `lt`: 숫자 필드의 값 제한
+
+### Pydantic 모델 예제
+
+```py
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+from typing import List
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str = Field(..., title="Item Name", min_length=2, max_length=50)
+    description: str = Field(None, description="The description of the item", max_length=300)
+    price: float = Field(..., gt=0, description="The price must be greater than zero")
+    tag: List[str] = Field(default=[], alias="item-tags")
+
+
+@app.post("/items/")
+async def create_item(item: Item):
+    return {"item": item.dict()}
+```
+
+이 코드에서 `Field` 함수의 `...`(Ellipsis)는 필드가 필수임을 나타낸다. `name`과 `price`는 필수 필드, `description`은 선택 필드, `tag`는 선택 필드이며 기본값이 빈 리스트이다.
