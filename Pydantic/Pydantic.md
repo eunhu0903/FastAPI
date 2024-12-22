@@ -112,3 +112,79 @@ async def create_item(item: Item):
 ```
 
 이 코드에서 `Field` 함수의 `...`(Ellipsis)는 필드가 필수임을 나타낸다. `name`과 `price`는 필수 필드, `description`은 선택 필드, `tag`는 선택 필드이며 기본값이 빈 리스트이다.
+
+### 중첩된 모델
+
+FastAPI에서 중첩된 모델은 하나의 모델이 다른 모델을 포함하는 구조이다. 이는 복잡한 데이터 형태를 효과적으로 모델링하는 데 사용된다.
+
+- **중첩된 모델의 예시**
+    * `Image` 모델이 `Item` 모델 안에 포함되어 있음.
+    * `Item` 모델은 `Image` 타입의 `Image` 필드를 가짐.
+
+### FastAPI 코드 예시
+
+```py
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Image(BaseModel):
+    url: str
+    name: str
+
+class Item(BaseModel):
+    name: str
+    description: str
+    image: Image
+
+@app.post("/items/")
+def create_item(item: Item):
+    return {"item": item.dict()}
+```
+
+- **Image 클래스:** 이미지에 대한 정보를 담는 Pydantic 모델.
+- **Item 클래스:** 아이템에 대한 정보를 담는 Pydantic 모델로, `Image` 모델을 `image` 필드로 포함.
+
+- **중첩된 모델의 장점**
+    * **재사용성:** `Image` 모델을 여러 모델에서 재사용할 수 있음.
+    * **가독성:** 복잡한 데이터 구조를 더 읽기 쉽게 만듬.
+    * **유지보수:** `Image` 모델을 수정하면 사용된 모든 곳에 자동으로 반영.
+
+### List와 Union 사용
+
+`List`와 `Union`은 FastAPI와 Pydantic에서 복잡한 데이터 구조와 다형성을 효과적으로 모델링하는 데 사용되는 타입 힌트이다.
+
+- **List**
+    * **용도:** 동일 타입의 여러 값들의 배열이나 리스트를 정의.
+    * **문법:** `List[<type>]`
+    * **예시:** `List[int]`는 정수 리스트, `List[str]`는 문자열 리스트.
+
+- **Union**
+    * **용도:** 여러 타입 중 하나를 허용하는 변수를 정의.
+    * **문법:** `Union[<type1>, <type2>, ...]`
+    * **예시:** `Union[int, str]`는 정수 또는 문자열 가능.
+
+### FastAPI 코드 예시
+
+```py
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List, Union
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+    tags: List[str]
+    variant: Union[int, str]
+
+@app.post("/items/")
+def create_item(item: Item):
+    return {"item": item.dict()}
+```
+
+- **Item 모델 설명:**
+    * `name`: 문자열 필드.
+    * `tags`: 문자열 리스트.
+    * `variant`: 정수 또는 문자열.
